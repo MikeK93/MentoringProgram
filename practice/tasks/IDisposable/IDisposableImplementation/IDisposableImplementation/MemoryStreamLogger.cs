@@ -5,24 +5,31 @@ namespace NetMentoring
 {
     public class MemoryStreamLogger : IDisposable
     {
-        private FileStream memoryStream;
-        private StreamWriter streamWriter;
+        private readonly StreamWriter _writer;
 
         public MemoryStreamLogger()
         {
-            memoryStream = new FileStream(@"\log.txt", FileMode.OpenOrCreate | FileMode.Append);
-            streamWriter = new StreamWriter(memoryStream);
+            var memoryStream = new FileStream(@"\log.txt", FileMode.OpenOrCreate | FileMode.Append);
+            _writer = new StreamWriter(memoryStream);
         }
 
         public void Log(string message)
         {
-            streamWriter.Write(message);
+            _writer.Write(message);
         }
 
         public void Dispose()
         {
-            streamWriter?.Dispose();
-            GC.SuppressFinalize(this);
+            Dispose(true);
         }
-   }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _writer.Dispose();
+                GC.SuppressFinalize(this);
+            }
+        }
+    }
 }

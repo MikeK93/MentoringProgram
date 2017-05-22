@@ -7,8 +7,8 @@ namespace NetMentoring
         private static void Main(string[] args)
         {
             for (var i = 0; i < 10000; i++)
-                WriteLog("Interation number #" + i);
-
+                WriteLog($"Interation number #{i}");
+            
             Console.WriteLine("Finished");
             Console.ReadKey();
         }
