@@ -6,11 +6,21 @@ namespace Convestudo.Unmanaged
     {
         private static void Main(string[] args)
         {
-            var fileWriter = new FileWriter("log.txt");
+            Console.WriteLine("Enter any text to log or [q] to exit:");
 
-            fileWriter.Write("First test string");
+            var input = Console.ReadLine();
+            while (!string.Equals(input, "q", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var now = DateTime.Now;
+                var timestamp = $"{now.Hour}.{now.Minute}.{now.Second}.{now.Millisecond}";
+                using (var fileWriter = new FileWriter($"log-{timestamp}.txt", CreationDisposition.CreateAlways))
+                {
+                    fileWriter.WriteLine(input);
+                }
+                Console.WriteLine($"echo {timestamp}: {input}");
 
-            Console.ReadKey();
+                input = Console.ReadLine();
+            }
         }
     }
 }
