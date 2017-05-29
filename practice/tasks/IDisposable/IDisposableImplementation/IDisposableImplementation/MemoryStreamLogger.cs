@@ -7,10 +7,9 @@ namespace NetMentoring
     {
         private readonly StreamWriter _writer;
 
-        public MemoryStreamLogger()
+        public MemoryStreamLogger(Stream target)
         {
-            var memoryStream = new FileStream(@"\log.txt", FileMode.OpenOrCreate | FileMode.Append);
-            _writer = new StreamWriter(memoryStream);
+            _writer = new StreamWriter(target);
         }
 
         public void Log(string message)
