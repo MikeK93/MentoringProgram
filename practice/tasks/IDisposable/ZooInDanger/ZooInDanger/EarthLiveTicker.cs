@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace Zoo
 {
-    public class EarthLiveTicker: ILiveTicker
+    public class EarthLiveTicker : ILiveTicker
     {
         private static readonly EarthLiveTicker LiveTiker = new EarthLiveTicker();
 
@@ -14,17 +13,15 @@ namespace Zoo
         private readonly IList<ITickListener> _listeners = new List<ITickListener>();
         public const int Interval = 10;
 
-        private readonly System.Timers.Timer tickTimer;
-
         private EarthLiveTicker()
         {
-            tickTimer = new System.Timers.Timer(Interval);
+            var tickTimer = new Timer(Interval);
             tickTimer.Elapsed += (o, e) => RunClock();
             tickTimer.AutoReset = true;
             tickTimer.Start();
         }
 
-        public static ILiveTicker LiveTicker { get { return LiveTiker; } }
+        public static ILiveTicker LiveTicker => LiveTiker;
 
         public void Subscribe(ITickListener tickListener)
         {
@@ -45,7 +42,7 @@ namespace Zoo
 
         private void RunClock()
         {
-            new Task(() =>
+            Task.Run(() =>
             {
                 lock (_syncObj)
                 {
@@ -54,8 +51,8 @@ namespace Zoo
                     {
                         tickListener.OnTick();
                     }
-                }                
-            }).Start();
+                }
+            });
         }
     }
 }

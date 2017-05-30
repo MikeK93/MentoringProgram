@@ -57,13 +57,9 @@ namespace Zoo
         {
             lock (_syncObj)
             {
-                var number = _rnd.Next(1, 10);
-
-                while (number > 0 && _animals.Count > 0)
+                for (int infectedCount = _rnd.Next(1, 10), infectedAnimal = _rnd.Next(0, _animals.Count - 1); infectedCount > 0 && _animals.Count > 0; infectedCount--)
                 {
-                    var infectedPosition = _rnd.Next(0, _animals.Count - 1);
-                    _animals[infectedPosition].Infect();
-                    number--;
+                    _animals[infectedAnimal].Infect();
                 }
             }
         }
@@ -75,16 +71,13 @@ namespace Zoo
             {
                 Interlocked.Exchange(ref _lastInfo, 0);
                 ShowStatus();
-                if (NumCorpses%1000 == 0 && NumCorpses > 0)
+                if (NumCorpses % 1000 == 0 && NumCorpses > 0)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Critical corpse number: {0}", NumCorpses);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("Running CG collect");
+                    Logger.Red("Critical corpse number: {0}", NumCorpses);
+                    Logger.Green("Running CG collect");
                     Console.Beep();
                     GC.Collect();
                     Thread.Sleep(200);
-                    Console.ResetColor();
                 }
             }
         }
@@ -101,7 +94,7 @@ namespace Zoo
         public void IsInHunger(IAnimal animal)
         {
             //emulating feeding animal with some random values
-            
+
             var foodProb = _rnd.Next(1, 100);
             if (foodProb < 96)
                 animal.Eat(foodProb.ToString(CultureInfo.InvariantCulture));

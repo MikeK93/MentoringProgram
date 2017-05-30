@@ -8,12 +8,20 @@
 
         public override int LifeInterval
         {
-            get { return 1; }
+            get
+            {
+                ValidateIfDisposed();
+                return 1;
+            }
         }
 
         public override int InfectionResistance
         {
-            get { return 80; }
+            get
+            {
+                ValidateIfDisposed();
+                return 80;
+            }
         }
     }
 }

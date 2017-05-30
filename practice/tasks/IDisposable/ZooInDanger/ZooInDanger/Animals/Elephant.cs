@@ -24,12 +24,21 @@
 
         public override int LifeInterval
         {
-            get { return 100; }
+            get
+            {
+                ValidateIfDisposed();
+                return 100;
+            }
         }
 
-        ~Elephant()
+        protected override void Dispose(bool disposing)
         {
-            _rightTusk = _leftTusk = null;
+            if (disposing)
+            {
+                _rightTusk = _leftTusk = _leftBackFoot = _leftFrontFoot = _rightBackFoot = _rightFrontFoot = null;
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

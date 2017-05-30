@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Zoo.Animals
+﻿namespace Zoo.Animals
 {
     public class Cat : Animal
     {
@@ -10,20 +8,37 @@ namespace Zoo.Animals
 
         public override int LifeInterval
         {
-            get { return 13; }
+            get
+            {
+                ValidateIfDisposed();
+                return 13;
+            }
         }
 
         public override int InfectionDeathInterval
         {
-            get { return 300; }
+            get
+            {
+                ValidateIfDisposed();
+                return 300;
+            }
         }
 
-        ~Cat()
+        protected override void Dispose(bool disposing)
         {
-            Logger.LogYellow("Finalizing cat!");
-
             // Release the object only in case number of corpses > 100
-            while (Zoo.NumCorpses > 200) { }
+            if (Zoo.NumCorpses <= 100) return;
+
+            if (disposing)
+            {
+                Logger.LogYellow("Disposing cat!");
+            }
+            else
+            {
+                Logger.LogYellow("Finalizing cat!");
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

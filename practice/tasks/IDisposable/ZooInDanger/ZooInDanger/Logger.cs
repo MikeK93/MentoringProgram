@@ -6,8 +6,7 @@ namespace Zoo
     {
         public static void Log(string str)
         {
-            if (AppSettings.IsLoggingEnabled)
-                Console.WriteLine(str);
+            Log(str, string.Empty);
         }
 
         public static void Log(string str, params object[] args)
@@ -18,12 +17,7 @@ namespace Zoo
 
         public static void LogYellow(string str)
         {
-            if (AppSettings.IsLoggingEnabled)
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(str);
-                Console.ResetColor();
-            }
+            LogYellow(str, string.Empty);
         }
 
         public static void LogYellow(string str, params object[] args)
@@ -32,6 +26,26 @@ namespace Zoo
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(str, args);
+                Console.ResetColor();
+            }
+        }
+
+        public static void Red(string str, params object[] args)
+        {
+            if (AppSettings.IsLoggingEnabled)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(str, args);
+                Console.ResetColor();
+            }
+        }
+
+        public static void Green(string str)
+        {
+            if (AppSettings.IsLoggingEnabled)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(str);
                 Console.ResetColor();
             }
         }

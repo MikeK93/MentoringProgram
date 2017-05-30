@@ -5,6 +5,8 @@ namespace Zoo.Animals
 {
     public class Animal : IAnimal, ITickListener
     {
+        private bool _disposed;
+
         //statuses
         private int _lastEat;
         private int _lastInfected = -1;
@@ -24,12 +26,50 @@ namespace Zoo.Animals
         private readonly IAnimalStatusTracker _statusTracker;
         private bool _isAlive = true;
 
-        public virtual int LifeInterval { get { return lifeInterval; }}
-        public virtual int InfectionResistance { get { return infectionResistance; } }
-        public virtual int InfectionDeathInterval { get { return infectionDeathInterval; } }
-        public virtual int HungerDeathInterval { get { return hungerDeathInterval; } }
-        public virtual int EatInterval { get { return eatInterval; } }
+        public virtual int LifeInterval
+        {
+            get
+            {
+                ValidateIfDisposed();
+                return lifeInterval;
+            }
+        }
 
+        public virtual int InfectionResistance
+        {
+            get
+            {
+                ValidateIfDisposed();
+                return infectionResistance;
+            }
+        }
+
+        public virtual int InfectionDeathInterval
+        {
+            get
+            {
+                ValidateIfDisposed();
+                return infectionDeathInterval;
+            }
+        }
+
+        public virtual int HungerDeathInterval
+        {
+            get
+            {
+                ValidateIfDisposed();
+                return hungerDeathInterval;
+            }
+        }
+
+        public virtual int EatInterval
+        {
+            get
+            {
+                ValidateIfDisposed();
+                return eatInterval;
+            }
+        }
 
         public Animal(IAnimalStatusTracker statusTracker)
         {
@@ -39,14 +79,11 @@ namespace Zoo.Animals
 
         private void OnAged()
         {
-            if (Age > LifeInterval)
-            {
-                Logger.Log("Animal #{0} died in age of {1}, because of age", _id, Age);
-                Die();                
-            }
-        }
+            if (!IsAlive) return;
 
-       
+            Logger.Log("Animal #{0} died in age of {1}, because of age", _id, Age);
+            Die();
+        }
 
         private void OnHungerDeath()
         {
@@ -86,13 +123,18 @@ namespace Zoo.Animals
 
         private void Die()
         {
+            ValidateIfDisposed();
+
             _isAlive = false;
             _statusTracker.Died(this);
             EarthLiveTicker.LiveTicker.Unsubscribe(this);
+            Dispose();
         }
 
         public virtual void Eat(string eatName)
         {
+            ValidateIfDisposed();
+
             if (_isAlive)
             {
                 Interlocked.Exchange(ref _inHungerSinceLastEat, -1);
@@ -102,32 +144,44 @@ namespace Zoo.Animals
 
         public virtual void Infect()
         {
+            ValidateIfDisposed();
+
             _lastInfected = 0;
         }
 
+        public virtual int Age
+        {
+            get
+            {
+                ValidateIfDisposed();
+                return _ticksAlive / YearInterval;
+            }
+        }
 
-        public virtual int Age { get { return _ticksAlive / YearInterval; } }
-        public virtual bool IsAlive { get { return _isAlive; } }
+        public virtual bool IsAlive
+        {
+            get
+            {
+                ValidateIfDisposed();
+                return _isAlive;
+            }
+        }
 
         public void Kill()
         {
+            ValidateIfDisposed();
+
             Logger.Log("Class: {2}. Animal #{0} has been killed in age of {1}", _id, Age, this.GetType().Name);
             Die();
         }
 
-        ~Animal()
-        {
-            _isAlive = false;
-            Logger.Log("Ruining animal: {0}, ID = {1}", GetType().Name, _id);
-            Interlocked.Decrement(ref Zoo.NumCorpses);
-            Logger.LogYellow("Ruining animal: {0} finished, ID= {1}", GetType().Name, _id);
-        }
-
         public void OnTick()
         {
+            ValidateIfDisposed();
+
             Interlocked.Increment(ref _ticksAlive);
             Interlocked.Increment(ref _lastEat);
-            
+
             if (_lastInfected >= 0)
                 Interlocked.Increment(ref _lastInfected);
 
@@ -136,7 +190,7 @@ namespace Zoo.Animals
 
             if (_lastInfected > InfectionDeathInterval)
                 OnInfection();
-            
+
             if (_lastEat > EatInterval)
                 OnHunger();
 
@@ -145,7 +199,41 @@ namespace Zoo.Animals
 
             if (Age > LifeInterval)
                 OnAged();
-             
+
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                _isAlive = false;
+                Logger.Log("Ruining animal: {0}, ID = {1}", GetType().Name, _id);
+                Interlocked.Decrement(ref Zoo.NumCorpses);
+                Logger.LogYellow("Ruining animal: {0} finished, ID= {1}", GetType().Name, _id);
+            }
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~Animal()
+        {
+            Dispose(false);
+        }
+
+        protected void ValidateIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(GetType().Name);
+            }
         }
     }
 }
