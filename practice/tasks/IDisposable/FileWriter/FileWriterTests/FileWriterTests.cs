@@ -10,8 +10,14 @@ namespace FileWriterTests
     {
         private const string TestFileName = "test.txt";
 
+        [TearDown]
+        public void TearDown()
+        {
+            File.Delete(TestFileName);
+        }
+
         [Test]
-        public void DisposeDoesWork()
+        public void Dispose_ShouldNotThrow()
         {
             var fileWriter = new FileWriter(TestFileName);
 
@@ -19,7 +25,7 @@ namespace FileWriterTests
         }
 
         [Test]
-        public void DisposingCanBeCalledTwise()
+        public void Disposing_CanBeCalledTwise()
         {
             var fileWriter = new FileWriter(TestFileName);
 
@@ -29,7 +35,7 @@ namespace FileWriterTests
         }
 
         [Test]
-        public void ResourceIsLocked()
+        public void CreateFileWriter_ShouldThrow_WhenResourceIsLocked()
         {
             var fileWriter1 = new FileWriter(TestFileName);
             fileWriter1.Write("Test");
@@ -37,14 +43,25 @@ namespace FileWriterTests
             Assert.Throws<FileLoadException>(() =>
             {
                 var file2 = new FileWriter(TestFileName);
-                file2.Write("adsf");
             });
 
             fileWriter1.Dispose();
         }
 
         [Test]
-        public void WriteFewWordsDoesWork()
+        public void Write_ShouldThrow_WhenCallWriteAfterDisposing()
+        {
+            var writer = new FileWriter(TestFileName);
+
+            writer.Write("Hello");
+
+            writer.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(() => writer.Write("World!"));
+        }
+
+        [Test]
+        public void Write_ShouldWriteWords()
         {
             const string testLine = "TestLine";
             var expected = String.Format("{0}{0}{0}{0}", testLine);
@@ -57,20 +74,16 @@ namespace FileWriterTests
                 fileWriter.Write(testLine);
             }
 
-            using (var fileStream = File.OpenRead(TestFileName))
-            using (var streamReader = new StreamReader(fileStream))
-            {
-                var actual = streamReader.ReadToEnd();
-                Assert.AreEqual(expected, actual);
-            }
+            var actual = File.ReadAllText(TestFileName);
+            Assert.AreEqual(expected, actual);
         }
 
         [Test]
-        public void WriteLineWritesWithNewLine()
+        public void WriteLine_ShouldWriteWithNewLine()
         {
             const string testLine = "TestLine";
             var expected = String.Format("{0}{1}{0}{1}{0}{1}{0}{1}", testLine, Environment.NewLine);
-            
+
             using (var fileWriter = new FileWriter(TestFileName))
             {
                 fileWriter.WriteLine(testLine);
@@ -79,12 +92,8 @@ namespace FileWriterTests
                 fileWriter.WriteLine(testLine);
             }
 
-            using (var fileStream = File.OpenRead(TestFileName))
-            using (var streamReader = new StreamReader(fileStream))
-            {
-                var actual = streamReader.ReadToEnd();
-                Assert.AreEqual(expected, actual);
-            }
+            var actual = File.ReadAllText(TestFileName);
+            Assert.AreEqual(expected, actual);
         }
     }
 }
