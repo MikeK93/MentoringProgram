@@ -8,77 +8,80 @@ namespace NetMentoring
     {
         private static void Main(string[] args)
         {
-            var t = new Stopwatch();
+            DisposingLoggerAndTarget();
 
-            DisposingLoggerAndTarget(t);
+            DisposingOnlyTarget();
 
-            DisposingOnlyTarget(t);
-
-            DisposingLoggerAndTargetInsideLoop(t);
+            DisposingLoggerAndTargetInsideLoop();
 
             Console.WriteLine("Finished");
             Console.ReadKey();
         }
 
-        private static void DisposingLoggerAndTargetInsideLoop(Stopwatch t)
+        private static void DisposingLoggerAndTargetInsideLoop()
         {
-            Console.WriteLine(nameof(DisposingLoggerAndTargetInsideLoop));
+            TimeLogger(nameof(DisposingLoggerAndTargetInsideLoop), () =>
+            {
+                for (var i = 0; i < 10000; i++)
+                {
+                    using (var file = new FileStream(@"\log.txt", FileMode.OpenOrCreate | FileMode.Append))
+                    using (var logger = new MemoryStreamLogger(file))
+                    {
+                        logger.Log($"Interation number #{i}");
+                    }
+                }
+            });
+        }
 
-            t.Start();
+        private static void DisposingOnlyTarget()
+        {
+            TimeLogger(nameof(DisposingOnlyTarget), () =>
+            {
+                using (var file = new FileStream(@"\log.txt", FileMode.OpenOrCreate | FileMode.Append))
+                {
+                    for (var i = 0; i < 10000; i++)
+                    {
+                        WriteLog(file, $"Interation number #{i}");
+                    }
+                }
 
-            for (var i = 0; i < 10000; i++)
+                void WriteLog(Stream to, string text)
+                {
+                    var logger = new MemoryStreamLogger(to);
+                    logger.Log(text);
+                }
+            });
+        }
+
+        private static void DisposingLoggerAndTarget()
+        {
+            TimeLogger(nameof(DisposingLoggerAndTarget), () =>
             {
                 using (var file = new FileStream(@"\log.txt", FileMode.OpenOrCreate | FileMode.Append))
                 using (var logger = new MemoryStreamLogger(file))
                 {
-                    logger.Log($"Interation number #{i}");
+                    for (var i = 0; i < 10000; i++)
+                    {
+                        logger.Log($"Interation number #{i}");
+                    }
                 }
-            }
-
-            t.Stop();
-            Console.WriteLine($"{t.Elapsed}");
+            });
         }
 
-        private static void DisposingOnlyTarget(Stopwatch t)
+        private static void TimeLogger(string actionName, Action action)
         {
-            Console.WriteLine(nameof(DisposingOnlyTarget));
-
-            t.Start();
-            using (var file = new FileStream(@"\log.txt", FileMode.OpenOrCreate | FileMode.Append))
+            using (var file = File.CreateText($"{actionName}-log.txt"))
             {
-                for (var i = 0; i < 10000; i++)
-                {
-                    WriteLog(file, $"Interation number #{i}");
-                }
+                var t = new Stopwatch();
+                t.Start();
+
+                action();
+
+                t.Stop();
+                string logMessage = $"{actionName} took {t.Elapsed}.";
+                Console.WriteLine(logMessage);
+                file.Write(logMessage);
             }
-
-            void WriteLog(Stream to, string text)
-            {
-                var logger = new MemoryStreamLogger(to);
-                logger.Log(text);
-            }
-
-            t.Stop();
-            Console.WriteLine($"{t.Elapsed}");
-        }
-
-        private static void DisposingLoggerAndTarget(Stopwatch t)
-        {
-            Console.WriteLine(nameof(DisposingLoggerAndTarget));
-
-            t.Start();
-
-            using (var file = new FileStream(@"\log.txt", FileMode.OpenOrCreate | FileMode.Append))
-            using (var logger = new MemoryStreamLogger(file))
-            {
-                for (var i = 0; i < 10000; i++)
-                {
-                    logger.Log($"Interation number #{i}");
-                }
-            }
-
-            t.Stop();
-            Console.WriteLine($"{t.Elapsed}");
         }
     }
 }
