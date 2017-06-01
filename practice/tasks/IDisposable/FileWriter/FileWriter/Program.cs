@@ -13,7 +13,7 @@ namespace Convestudo.Unmanaged
             {
                 var now = DateTime.Now;
                 var timestamp = $"{now.Hour}.{now.Minute}.{now.Second}.{now.Millisecond}";
-                using (var fileWriter = new FileWriter($"log-{timestamp}.txt", CreationDisposition.CreateAlways))
+                using (var fileWriter = new FileWriter($"log.txt", CreationDisposition.CreateAlways))
                 {
                     fileWriter.WriteLine(input);
                 }

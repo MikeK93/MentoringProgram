@@ -40,10 +40,7 @@ namespace FileWriterTests
             var fileWriter1 = new FileWriter(TestFileName);
             fileWriter1.Write("Test");
 
-            Assert.Throws<FileLoadException>(() =>
-            {
-                var file2 = new FileWriter(TestFileName);
-            });
+            Assert.Throws<FileLoadException>(() => new FileWriter(TestFileName));
 
             fileWriter1.Dispose();
         }
