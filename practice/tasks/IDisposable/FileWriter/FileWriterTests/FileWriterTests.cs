@@ -10,65 +10,78 @@ namespace FileWriterTests
     {
         private const string TestFileName = "test.txt";
 
-        [Test]
-        public void DisposeDoesWork()
+        [TearDown]
+        public void TearDown()
         {
-            var fileWriter = new FileWriter(TestFileName);
-            //Assert.DoesNotThrow(fileWriter.Dispose);
+            File.Delete(TestFileName);
         }
 
         [Test]
-        public void DisposingCanBeCalledTwise()
+        public void Dispose_ShouldNotThrow()
         {
             var fileWriter = new FileWriter(TestFileName);
 
-            //fileWriter.Dispose();            
-            //Assert.DoesNotThrow(fileWriter.Dispose);
+            Assert.DoesNotThrow(fileWriter.Dispose);
         }
 
         [Test]
-        public void ResourceIsLocked()
+        public void Disposing_CanBeCalledTwise()
+        {
+            var fileWriter = new FileWriter(TestFileName);
+
+            fileWriter.Dispose();
+
+            Assert.DoesNotThrow(fileWriter.Dispose);
+        }
+
+        [Test]
+        public void CreateFileWriter_ShouldThrow_WhenResourceIsLocked()
         {
             var fileWriter1 = new FileWriter(TestFileName);
             fileWriter1.Write("Test");
 
-            Assert.Throws<IOException>(() =>
-            {
-                var file2 = new FileWriter(TestFileName);
-                file2.Write("adsf");
-            });
+            Assert.Throws<FileLoadException>(() => new FileWriter(TestFileName));
+
+            fileWriter1.Dispose();
         }
 
         [Test]
-        public void WriteFewWordsDoesWork()
+        public void Write_ShouldThrow_WhenCallWriteAfterDisposing()
         {
-            const string testLine = "TestLine";
-            var extectedStr = String.Format("{0}{0}{0}{0}", testLine);
-            var fileWriter = new FileWriter(TestFileName);
-           /* using (var fileWriter = new FileWriter(TestFileName))*/
-            {
-                fileWriter.Write(testLine);
-                fileWriter.Write(testLine);
-                fileWriter.Write(testLine);
-                fileWriter.Write(testLine);
-            }
+            var writer = new FileWriter(TestFileName);
 
-            using (var fileStream = File.OpenRead(TestFileName))
-            using (var streamReader = new StreamReader(fileStream))
-            {
-                var str = streamReader.ReadToEnd();
-                Assert.AreEqual(extectedStr, str);
-            }
+            writer.Write("Hello");
+
+            writer.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(() => writer.Write("World!"));
         }
 
         [Test]
-        public void WriteLineWritesWithNewLine()
+        public void Write_ShouldWriteWords()
         {
             const string testLine = "TestLine";
-            var extectedStr = String.Format("{0}{1}{0}{1}{0}{1}{0}", testLine, Environment.NewLine);
+            var expected = String.Format("{0}{0}{0}{0}", testLine);
 
-            var fileWriter = new FileWriter(TestFileName);
-            //using (var fileWriter = new FileWriter(TestFileName))
+            using (var fileWriter = new FileWriter(TestFileName))
+            {
+                fileWriter.Write(testLine);
+                fileWriter.Write(testLine);
+                fileWriter.Write(testLine);
+                fileWriter.Write(testLine);
+            }
+
+            var actual = File.ReadAllText(TestFileName);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void WriteLine_ShouldWriteWithNewLine()
+        {
+            const string testLine = "TestLine";
+            var expected = String.Format("{0}{1}{0}{1}{0}{1}{0}{1}", testLine, Environment.NewLine);
+
+            using (var fileWriter = new FileWriter(TestFileName))
             {
                 fileWriter.WriteLine(testLine);
                 fileWriter.WriteLine(testLine);
@@ -76,12 +89,8 @@ namespace FileWriterTests
                 fileWriter.WriteLine(testLine);
             }
 
-            using (var fileStream = File.OpenRead(TestFileName))
-            using (var streamReader = new StreamReader(fileStream))
-            {
-                var str = streamReader.ReadToEnd();
-                Assert.AreEqual(extectedStr, str);
-            }
+            var actual = File.ReadAllText(TestFileName);
+            Assert.AreEqual(expected, actual);
         }
     }
 }

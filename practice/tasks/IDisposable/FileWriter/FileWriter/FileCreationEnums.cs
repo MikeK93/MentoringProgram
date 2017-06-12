@@ -35,7 +35,7 @@ namespace Convestudo.Unmanaged
     /// Defines an action to do on creating file /to open, create, fails if exists...
     /// <see cref="http://msdn.microsoft.com/en-us/library/windows/desktop/aa363858(v=vs.85).aspx"/>
     /// </summary>
-    internal enum CreationDisposition : uint
+    public enum CreationDisposition : uint
     {
         CreateNew = 1,
         CreateAlways = 2,
